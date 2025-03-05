@@ -1,21 +1,59 @@
-// ignore_for_file: dead_code
-
 import 'package:flutter/material.dart';
+import 'package:hirewise/auth/auth_service.dart';
 import 'package:hirewise/components/buildSocialButton.dart';
+// Import the IntroPage
 import 'package:hirewise/pages/intro_register.dart';
+import 'package:hirewise/pages/intropage.dart';
 
-class loginpage extends StatefulWidget {
-  const loginpage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<loginpage> createState() => _loginpageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _loginpageState extends State<loginpage> {
+// ignore: camel_case_types
+class _LoginPageState extends State<LoginPage> {
+  final authService = AuthService();
+
+  final emailControl = TextEditingController();
+  final passwordControl = TextEditingController();
+
+  bool _isLoading = false;
+
+  void login() async {
+    final email = emailControl.text;
+    final password = passwordControl.text;
+    setState(() {
+      _isLoading = true; // Show the loading spinner
+    });
+
+    try {
+      await authService.SignInwithEmailPassword(email, password);
+      // If successful, navigate to IntroPage
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Intropage()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide the loading spinner
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(243, 243, 243, 1),
+      backgroundColor: const Color.fromRGBO(243, 243, 243, 1),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
@@ -37,101 +75,87 @@ class _loginpageState extends State<loginpage> {
                 ),
                 const SizedBox(height: 40),
 
-                //text fields
-
-                //email
+                // Email text field
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color.fromRGBO(
-                      247,
-                      248,
-                      250,
-                      1,
-                    ), // Fixed opacity (0-1)
+                    color: const Color.fromRGBO(247, 248, 250, 1),
                     border: Border.all(color: Colors.white24),
-                    borderRadius: BorderRadius.circular(
-                      8,
-                    ), // Optional: Add border radius
+                    borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         spreadRadius: 0,
                         blurRadius: 4,
-                        offset: const Offset(0, 2), // Changes shadow position
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: const TextField(
-                    decoration: InputDecoration(
+                  child: TextField(
+                    controller: emailControl,
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: "Enter email",
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ), // Add padding
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
                   ),
                 ),
-                //password
                 const SizedBox(height: 30),
 
+                // Password text field
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color.fromRGBO(
-                      247,
-                      248,
-                      250,
-                      1,
-                    ), // Fixed opacity (0-1)
+                    color: const Color.fromRGBO(247, 248, 250, 1),
                     border: Border.all(color: Colors.white24),
-                    borderRadius: BorderRadius.circular(
-                      8,
-                    ), // Optional: Add border radius
+                    borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        // ignore: deprecated_member_use
                         color: Colors.black.withOpacity(0.1),
                         spreadRadius: 0,
                         blurRadius: 4,
-                        offset: const Offset(0, 2), // Changes shadow position
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: const TextField(
+                  child: TextField(
+                    controller: passwordControl,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: "Enter password",
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ), // Add padding
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 40),
 
-                Container(
-                  padding: EdgeInsets.all(10),
-
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(34, 35, 37, 1),
-
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-
-                  child: Center(
-                    child: Text(
-                      textAlign: TextAlign.center,
-                      "Sign in",
-                      style: TextStyle(
-                        color: Color.fromRGBO(243, 243, 243, 1),
-                        fontSize: 19,
-                        fontWeight: FontWeight.w100,
-                        height: 1.3,
+                // Sign in button
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(),
+                    ) // Show loading spinner when logging in
+                    : GestureDetector(
+                      onTap: login,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(34, 35, 37, 1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Sign in",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromRGBO(243, 243, 243, 1),
+                              fontSize: 19,
+                              fontWeight: FontWeight.w100,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
                 const SizedBox(height: 10),
                 Row(
@@ -151,17 +175,10 @@ class _loginpageState extends State<loginpage> {
                         "Register Here",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-
                           decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
-                  ],
-                ),
-
-                Row(
-                  children: [
-                    Container(decoration: BoxDecoration(color: Colors.black)),
                   ],
                 ),
 

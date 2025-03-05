@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/intro_login_page.dart' show loginpage;
+import 'package:hirewise/pages/intro_login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: loginpage(),
+      home: LoginPage(),
     );
   }
 }
