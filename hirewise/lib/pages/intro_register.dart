@@ -23,7 +23,6 @@ class _IntroRegisterState extends State<IntroRegister> {
     final email = emailControl.text;
     final password = passwordControl.text;
     final confirmPassword = confirmPasswordControl.text;
-    final username = usernameControl.text;
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(

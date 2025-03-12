@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
   //sign in with email password
+  // ignore: non_constant_identifier_names
   Future<AuthResponse> SignInwithEmailPassword(
     String email,
     String password,
