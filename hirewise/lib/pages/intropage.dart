@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/components/category_circle.dart';
+import 'package:hirewise/components/content_card.dart';
+// Import your GigCard component
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Intropage extends StatefulWidget {
@@ -10,17 +12,22 @@ class Intropage extends StatefulWidget {
 }
 
 class _IntropageState extends State<Intropage> {
+  // Future variables to store data fetched from Supabase
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
+  late Future<List<Map<String, dynamic>>> _workersFuture;
 
   @override
   void initState() {
     super.initState();
+    // Fetch categories and workers data when the page initializes
     _categoriesFuture = fetchCategories();
+    _workersFuture = fetchWorkers();
   }
 
+  // Function to fetch categories from Supabase
   Future<List<Map<String, dynamic>>> fetchCategories() async {
     final response = await Supabase.instance.client
-        .from('category')
+        .from('category') // Replace 'category' with your table name
         .select()
         .order('created_at', ascending: false);
 
@@ -31,10 +38,31 @@ class _IntropageState extends State<Intropage> {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  // Added refresh function for better UX
+  // Function to fetch workers from Supabase
+  Future<List<Map<String, dynamic>>> fetchWorkers() async {
+    final response = await Supabase.instance.client
+        .from('Giginfo') // Replace 'workers' with your table name
+        .select()
+        .order('created_at', ascending: false);
+
+    if (response.isEmpty) {
+      throw Exception('No workers found');
+    }
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  // Function to refresh categories data
   Future<void> _refreshCategories() async {
     setState(() {
       _categoriesFuture = fetchCategories();
+    });
+  }
+
+  // Function to refresh workers data
+  Future<void> _refreshWorkers() async {
+    setState(() {
+      _workersFuture = fetchWorkers();
     });
   }
 
@@ -42,7 +70,6 @@ class _IntropageState extends State<Intropage> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // Added theme data for consistent styling
       theme: ThemeData(
         primaryColor: Colors.blue.shade700,
         colorScheme: ColorScheme.fromSeed(
@@ -50,87 +77,70 @@ class _IntropageState extends State<Intropage> {
           brightness: Brightness.light,
         ),
         fontFamily: "roboto",
-        useMaterial3: true, // Using Material 3 for modern look
+        useMaterial3: true,
       ),
+
       home: SafeArea(
         child: Scaffold(
-          // Added gradient background for modern look
           backgroundColor: Colors.grey.shade50,
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(70), // Reduced height slightly
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                // Improved shadow for more subtle, modern look
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    spreadRadius: 0,
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: AppBar(
-                toolbarHeight: 70,
-                automaticallyImplyLeading: false,
-                backgroundColor: Colors.white,
-                elevation: 0,
-                // Improved layout with better spacing
-                title: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50, // Added background to logo
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'lib/images/apple.png',
-                        width: 32,
-                        height: 32,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            toolbarHeight: 80,
+            title: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundImage: AssetImage('lib/images/avatar.jpg'),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      "Sonal Thilakarathna",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      "Hirewise",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87, // Slightly softer black
-                        fontFamily: "roboto",
+                    Text(
+                      "I'm a Client",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.notifications_none,
+                        size: 28,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {},
+                    ),
+                    Positioned(
+                      right: 12,
+                      top: 12,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                actions: [
-                  // Added notification icon for modern app feel
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.black87,
-                      size: 26,
-                    ),
-                    onPressed: () {
-                      // Notification functionality
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.search,
-                      color: Colors.black87,
-                      size: 26,
-                    ),
-                    onPressed: () {
-                      // Search functionality
-                    },
-                  ),
-                  const SizedBox(width: 8), // Added padding at the end
-                ],
-              ),
+              ],
             ),
           ),
-          // Wrapped body in RefreshIndicator for pull-to-refresh functionality
+
           body: RefreshIndicator(
             onRefresh: _refreshCategories,
             color: Colors.blue.shade700,
@@ -141,11 +151,14 @@ class _IntropageState extends State<Intropage> {
                   horizontal: 16.0,
                   vertical: 8.0,
                 ),
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+
                   children: [
                     const SizedBox(height: 16),
-                    // Added section title for better organization
+
+                    // Categories Section
                     const Padding(
                       padding: EdgeInsets.only(left: 4.0, bottom: 12.0),
                       child: Text(
@@ -162,12 +175,12 @@ class _IntropageState extends State<Intropage> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          // Improved loading state with shimmer effect placeholder
+                          // Show a loading state with placeholder circles
                           return SizedBox(
                             height: 120,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              itemCount: 5, // Show 5 placeholder items
+                              itemCount: 5,
                               itemBuilder: (context, index) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -201,7 +214,7 @@ class _IntropageState extends State<Intropage> {
                             ),
                           );
                         } else if (snapshot.hasError) {
-                          // Improved error state with retry button
+                          // Show an error state with a retry button
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -226,7 +239,7 @@ class _IntropageState extends State<Intropage> {
                           );
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          // Improved empty state
+                          // Show an empty state
                           return const Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -245,8 +258,8 @@ class _IntropageState extends State<Intropage> {
                             ),
                           );
                         } else {
+                          // Display the categories
                           final categories = snapshot.data!;
-                          // Added container with subtle shadow for better visual hierarchy
                           return Container(
                             height: 130,
                             decoration: BoxDecoration(
@@ -270,7 +283,6 @@ class _IntropageState extends State<Intropage> {
                               itemCount: categories.length,
                               itemBuilder: (context, index) {
                                 final category = categories[index];
-                                // Added animated hover effect for better interactivity
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8.0,
@@ -280,6 +292,9 @@ class _IntropageState extends State<Intropage> {
                                     duration: const Duration(milliseconds: 200),
                                     child: CategoryCircle(
                                       categoryName: category['category_name'],
+                                      categoryImage:
+                                          category['category_icon'] ??
+                                          'lib/images/caticon.png',
                                     ),
                                   ),
                                 );
@@ -290,11 +305,12 @@ class _IntropageState extends State<Intropage> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    // Added recommended jobs section for better content organization
+
+                    // Workers Section
                     const Padding(
                       padding: EdgeInsets.only(left: 4.0, bottom: 12.0),
                       child: Text(
-                        "Recommended for you",
+                        "Available Workers",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -302,64 +318,68 @@ class _IntropageState extends State<Intropage> {
                         ),
                       ),
                     ),
-                    // Placeholder for recommended jobs
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Recommended jobs will appear here",
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ),
+
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _workersFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Center(
+                            child: Text('No workers available.'),
+                          );
+                        } else {
+                          final workers = snapshot.data!;
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: workers.length,
+                            itemBuilder: (context, index) {
+                              final worker = workers[index];
+
+                              return Column(
+                                children: [
+                                  GigCard(
+                                    sellerName:
+                                        worker['worker_name'] ?? 'Unknown',
+                                    gigTitle:
+                                        worker['Title'] ??
+                                        'No title available.',
+                                    thumbnailImage:
+                                        worker['thumbnail_image'] ??
+                                        'lib/images/gigimage.jpg',
+                                    profileImage:
+                                        worker['profile_image'] ??
+                                        'lib/images/avatar.jpg',
+                                    rating:
+                                        (worker['rating'] as num?)
+                                            ?.toDouble() ??
+                                        0.0,
+                                    reviews: worker['reviews'] ?? 0,
+                                    price: (worker['Price']),
+                                    isTopRated: worker['is_top_rated'] ?? false,
+                                  ),
+
+                                  SizedBox(height: 30),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          // Added bottom navigation for complete app experience
-          bottomNavigationBar: BottomNavigationBar(
-            selectedItemColor: Colors.blue.shade700,
-            unselectedItemColor: Colors.grey,
-            currentIndex: 0,
-            type: BottomNavigationBarType.fixed,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.work_outline),
-                activeIcon: Icon(Icons.work),
-                label: 'Jobs',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bookmark_outline),
-                activeIcon: Icon(Icons.bookmark),
-                label: 'Saved',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profile',
-              ),
-            ],
-            onTap: (index) {
-              // Handle navigation
-            },
           ),
         ),
       ),

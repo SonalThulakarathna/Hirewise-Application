@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/intro%20Screens/intros_1.dart';
-import 'package:hirewise/intro%20Screens/intros_2.dart';
-import 'package:hirewise/intro%20Screens/intros_3.dart';
+import 'package:hirewise/onboarding%20Screens/intros_1.dart';
+import 'package:hirewise/onboarding%20Screens/intros_2.dart';
+import 'package:hirewise/onboarding%20Screens/intros_3.dart';
+import 'package:hirewise/pages/login.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
+// Import the HomeScreen
 
 class Onboardingscreen extends StatefulWidget {
   const Onboardingscreen({super.key});
@@ -12,9 +15,10 @@ class Onboardingscreen extends StatefulWidget {
 }
 
 class _OnboardingscreenState extends State<Onboardingscreen> {
-  PageController _controller = PageController();
+  final PageController _controller = PageController();
 
   bool onLastpage = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +40,6 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
               children: [
                 GestureDetector(
                   child: Text("Skip"),
-
                   onTap: () {
                     _controller.jumpToPage(3);
                   },
@@ -46,19 +49,22 @@ class _OnboardingscreenState extends State<Onboardingscreen> {
 
                 onLastpage
                     ? GestureDetector(
-                      child: Text("Done "),
+                      child: Text("Done"),
                       onTap: () {
-                        _controller.nextPage(
-                          duration: Duration(microseconds: 5000),
-                          curve: Curves.easeIn,
+                        // Navigate to HomeScreen when "Done" is clicked
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage()),
                         );
                       },
                     )
                     : GestureDetector(
-                      child: Text("next "),
+                      child: Text("Next"),
                       onTap: () {
                         _controller.nextPage(
-                          duration: Duration(microseconds: 5000),
+                          duration: Duration(
+                            milliseconds: 500,
+                          ), // Corrected duration
                           curve: Curves.easeIn,
                         );
                       },

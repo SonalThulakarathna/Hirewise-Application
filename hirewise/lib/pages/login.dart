@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/auth/auth_service.dart';
 import 'package:hirewise/components/buildSocialButton.dart';
+import 'package:hirewise/pages/bottomnavbar.dart';
 // Import the IntroPage
-import 'package:hirewise/pages/intro_register.dart';
-import 'package:hirewise/pages/intropage.dart';
+import 'package:hirewise/pages/register.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Intropage()),
+          MaterialPageRoute(builder: (context) => const Intropagebottom()),
         );
       }
     } catch (e) {
