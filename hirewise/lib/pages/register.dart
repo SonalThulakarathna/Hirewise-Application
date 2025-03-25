@@ -23,6 +23,7 @@ class _IntroRegisterState extends State<IntroRegister> {
     final email = emailControl.text;
     final password = passwordControl.text;
     final confirmPassword = confirmPasswordControl.text;
+    final username = usernameControl.text;
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(
@@ -34,7 +35,11 @@ class _IntroRegisterState extends State<IntroRegister> {
     setState(() => _isLoading = true);
 
     try {
-      await authService.signupwithEmailPassword(email, password);
+      await authService.signupwithEmailPassword(
+        email,
+        password,
+        username as String,
+      );
       // Navigate to another screen after successful registration
       // Example: Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {

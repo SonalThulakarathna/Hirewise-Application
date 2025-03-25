@@ -94,7 +94,7 @@ class _IntropageState extends State<Intropagebottom> {
           });
         },
         backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue.shade700,
+        selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
         unselectedItemColor: Colors.grey.shade600,
         type: BottomNavigationBarType.fixed,
         elevation: 10,
@@ -108,8 +108,8 @@ class _IntropageState extends State<Intropagebottom> {
             label: 'Categories',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline_outlined),
-            label: 'Chat',
+            icon: Icon(Icons.trending_up_outlined),
+            label: 'Popular',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_rounded),
