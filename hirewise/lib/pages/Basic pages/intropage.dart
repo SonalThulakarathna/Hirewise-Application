@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/components/category_circle.dart';
 import 'package:hirewise/components/content_card.dart';
-// Import your GigCard component
+import 'package:hirewise/pages/Gig%20related%20pages/Giginsidepage.dart'; // Import GigInsidePage
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Intropage extends StatefulWidget {
@@ -41,7 +41,7 @@ class _IntropageState extends State<Intropage> {
   // Function to fetch workers from Supabase
   Future<List<Map<String, dynamic>>> fetchWorkers() async {
     final response = await Supabase.instance.client
-        .from('Giginfo') // Replace 'workers' with your table name
+        .from('Giginfo') // Replace 'Giginfo' with your table name
         .select()
         .order('created_at', ascending: false);
 
@@ -79,7 +79,6 @@ class _IntropageState extends State<Intropage> {
         fontFamily: "roboto",
         useMaterial3: true,
       ),
-
       home: SafeArea(
         child: Scaffold(
           backgroundColor: Colors.grey.shade50,
@@ -140,7 +139,6 @@ class _IntropageState extends State<Intropage> {
               ],
             ),
           ),
-
           body: RefreshIndicator(
             onRefresh: _refreshCategories,
             color: Colors.blue.shade700,
@@ -151,10 +149,8 @@ class _IntropageState extends State<Intropage> {
                   horizontal: 16.0,
                   vertical: 8.0,
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     const SizedBox(height: 16),
 
@@ -175,7 +171,6 @@ class _IntropageState extends State<Intropage> {
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          // Show a loading state with placeholder circles
                           return SizedBox(
                             height: 120,
                             child: ListView.builder(
@@ -214,7 +209,6 @@ class _IntropageState extends State<Intropage> {
                             ),
                           );
                         } else if (snapshot.hasError) {
-                          // Show an error state with a retry button
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -239,7 +233,6 @@ class _IntropageState extends State<Intropage> {
                           );
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          // Show an empty state
                           return const Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +251,6 @@ class _IntropageState extends State<Intropage> {
                             ),
                           );
                         } else {
-                          // Display the categories
                           final categories = snapshot.data!;
                           return Container(
                             height: 130,
@@ -318,7 +310,6 @@ class _IntropageState extends State<Intropage> {
                         ),
                       ),
                     ),
-
                     FutureBuilder<List<Map<String, dynamic>>>(
                       future: _workersFuture,
                       builder: (context, snapshot) {
@@ -347,27 +338,42 @@ class _IntropageState extends State<Intropage> {
 
                               return Column(
                                 children: [
-                                  GigCard(
-                                    sellerName:
-                                        worker['worker_name'] ?? 'Unknown',
-                                    gigTitle:
-                                        worker['Title'] ??
-                                        'No title available.',
-                                    thumbnailImage:
-                                        worker['thumbnail_image'] ??
-                                        'lib/images/gigimage.jpg',
-                                    profileImage:
-                                        worker['profile_image'] ??
-                                        'lib/images/avatar.jpg',
-                                    rating:
-                                        (worker['rating'] as num?)
-                                            ?.toDouble() ??
-                                        0.0,
-                                    reviews: worker['reviews'] ?? 0,
-                                    price: (worker['Price']),
-                                    isTopRated: worker['is_top_rated'] ?? false,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => GigInsidePage(
+                                                gigData: worker,
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: GigCard(
+                                      sellerName:
+                                          worker['worker_name'] ?? 'Unknown',
+                                      gigTitle:
+                                          worker['Title'] ??
+                                          'No title available.',
+                                      thumbnailImage:
+                                          worker['thumbnail_image'] ??
+                                          'lib/images/gigimage.jpg',
+                                      profileImage:
+                                          worker['profile_image'] ??
+                                          'lib/images/avatar.jpg',
+                                      rating:
+                                          (worker['rating'] as num?)
+                                              ?.toDouble() ??
+                                          0.0,
+                                      reviews: worker['reviews'] ?? 0,
+                                      price: (worker['Price']),
+                                      isTopRated:
+                                          worker['is_top_rated'] ?? false,
+                                      gigId:
+                                          worker['gig_id'], // Pass the gig_id here
+                                    ),
                                   ),
-
                                   SizedBox(height: 30),
                                 ],
                               );

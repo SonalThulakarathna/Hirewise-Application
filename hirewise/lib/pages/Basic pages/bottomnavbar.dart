@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/categorypage.dart';
 import 'package:hirewise/pages/intropage.dart';
 import 'package:hirewise/pages/popularservice.dart';
 import 'package:hirewise/pages/profilepage.dart';
@@ -71,10 +70,10 @@ class _IntropageState extends State<Intropagebottom> {
   // List of pages for Bottom Navigation Bar
   final List<Widget> _pages = [
     Intropage(), // Page 0 - Home
-    CategoriesScreen(), // Page 1 - Categories
+    chatpage(), // Page 1 - Categories
     PopularServicesPage(), // Page 2 - Workers
-    ProfileScreen(),
-    chatpage(), // Page 3 - Profile
+    EnhancedProfileScreen(),
+    // Page 3 - Profile
   ];
 
   @override
@@ -100,19 +99,19 @@ class _IntropageState extends State<Intropagebottom> {
         elevation: 10,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
+            icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.category_rounded),
-            label: 'Categories',
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'Message',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up_outlined),
             label: 'Popular',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
+            icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),
         ],
@@ -128,8 +127,6 @@ class chatpage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('👤 Profile Page', style: TextStyle(fontSize: 20)),
-    );
+    return Center(child: Text('👤 chatpage', style: TextStyle(fontSize: 20)));
   }
 }

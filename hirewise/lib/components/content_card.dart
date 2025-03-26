@@ -20,6 +20,7 @@ class GigCard extends StatelessWidget {
     required this.reviews,
     required this.price,
     this.isTopRated = false,
+    required gigId,
   });
 
   @override
