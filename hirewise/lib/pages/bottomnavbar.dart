@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hirewise/pages/intropage.dart';
 import 'package:hirewise/pages/popularservice.dart';
 import 'package:hirewise/pages/profilepage.dart';
+import 'package:hirewise/pages/taskrequestpage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Intropagebottom extends StatefulWidget {
@@ -70,10 +71,10 @@ class _IntropageState extends State<Intropagebottom> {
   // List of pages for Bottom Navigation Bar
   final List<Widget> _pages = [
     Intropage(), // Page 0 - Home
-    chatpage(), // Page 1 - Categories
-    PopularServicesPage(), // Page 2 - Workers
-    EnhancedProfileScreen(),
-    // Page 3 - Profile
+    PopularServicesPage(), // Page 1 - Categories
+    PopularServicesPage(),
+    EnhancedSellerTaskRequestPage(), // Page 3 - Order
+    EnhancedProfileScreen(), // Page 4 - Profile
   ];
 
   @override
@@ -111,6 +112,11 @@ class _IntropageState extends State<Intropagebottom> {
             label: 'Popular',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.work_outline),
+            label: 'Order',
+          ),
+
+          BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),
@@ -128,5 +134,14 @@ class chatpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(child: Text('👤 chatpage', style: TextStyle(fontSize: 20)));
+  }
+}
+
+class orderpage extends StatelessWidget {
+  const orderpage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: Text("Order Page "));
   }
 }

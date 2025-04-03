@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hirewise/onboarding%20Screens/intros_1.dart';
 import 'package:hirewise/onboarding%20Screens/intros_2.dart';
 import 'package:hirewise/onboarding%20Screens/intros_3.dart';
-import 'package:hirewise/pages/login.dart';
+import 'package:hirewise/pages/Authentication%20Pages/login.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 // Import the HomeScreen

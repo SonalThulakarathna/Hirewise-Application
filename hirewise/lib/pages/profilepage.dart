@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:hirewise/auth/auth_service.dart';
 import 'package:hirewise/pages/Gig%20related%20pages/gigform.dart'
-    show EnhancedGigDetailsForm, GigDetailsForm;
-import 'package:supabase_flutter/supabase_flutter.dart';
+    show EnhancedGigDetailsForm;
+import 'package:hirewise/pages/Gig%20related%20pages/mygigpage.dart';
+import 'package:hirewise/pages/editprofilepage.dart';
+import 'package:hirewise/pages/taskrequestpage.dart';
+import 'package:hirewise/userservice/userservice.dart';
 
+// Main Profile Screen
 class EnhancedProfileScreen extends StatefulWidget {
   const EnhancedProfileScreen({super.key});
 
   @override
-  _EnhancedProfileScreenState createState() => _EnhancedProfileScreenState();
+  State<EnhancedProfileScreen> createState() => _EnhancedProfileScreenState();
 }
 
 class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
-  String? userName;
-  bool isSeller = false; // Default mode is Buyer
+  late Map<String, dynamic> userProfile;
+  bool isSeller = false;
   bool isLoading = true;
-  String? userEmail;
-  String? userAvatar;
-  double balance = 500.00; // Placeholder balance
+  double balance = 500.00;
+
+  final authService = AuthService();
+  final UserService userService = UserService();
 
   @override
   void initState() {
@@ -25,54 +31,32 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
   }
 
   Future<void> _fetchUserData() async {
+    setState(() => isLoading = true);
+    final profile = await userService.getFullProfile();
+    if (!mounted) return;
     setState(() {
-      isLoading = true;
+      userProfile = profile;
+      isLoading = false;
     });
+  }
 
+  void logout() async {
     try {
-      final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-
-      if (user == null) {
-        setState(() {
-          userName = "Guest";
-          userEmail = "guest@example.com";
-          isLoading = false;
-        });
-        return;
+      setState(() => isLoading = true);
+      await authService.signOut();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/login');
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
       }
-
-      final response =
-          await supabase
-              .from('profile')
-              .select('username, email, avatar_url')
-              .eq('id', user.id)
-              .single();
-
-      if (!mounted) return; // Check if the widget is still mounted
-
-      setState(() {
-        userName = response['name'] ?? "Guest";
-        userEmail = response['email'] ?? user.email ?? "No email";
-        userAvatar = response['avatar_url'];
-        isLoading = false;
-      });
-    } catch (error) {
-      print("Error fetching user data: $error");
-      if (!mounted) return; // Check if the widget is still mounted
-
-      setState(() {
-        userName = "Guest";
-        userEmail = "guest@example.com";
-        isLoading = false;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color(0xFFF3F3F3),
       body:
           isLoading
               ? _buildLoadingState()
@@ -82,9 +66,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                   children: [
                     _buildProfileHeader(),
                     _buildAccountTypeSwitch(),
-                    const SizedBox(height: 8),
-
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Expanded(child: _buildMenuSection()),
                   ],
                 ),
@@ -105,7 +87,6 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            spreadRadius: 0,
             offset: const Offset(0, 2),
           ),
         ],
@@ -119,18 +100,18 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.blue.shade100, width: 3),
+                      border: Border.all(color: Colors.grey.shade300, width: 3),
                     ),
                     child: CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey.shade200,
                       backgroundImage:
-                          userAvatar != null
-                              ? NetworkImage(userAvatar!)
+                          userProfile['avatar_url'] != null
+                              ? NetworkImage(userProfile['avatar_url'])
                               : const AssetImage('assets/profile_picture.png')
                                   as ImageProvider,
                       child:
-                          userAvatar == null
+                          userProfile['avatar_url'] == null
                               ? Icon(
                                 Icons.person,
                                 size: 40,
@@ -145,14 +126,28 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade700,
+                        color: const Color(0xFF222325),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
-                      child: const Icon(
-                        Icons.edit,
-                        size: 16,
-                        color: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.edit,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          // Navigate to the edit profile page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => EnhancedEditProfilePage(
+                                    currentUsername: userProfile['username'],
+                                  ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -164,62 +159,23 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userName ?? "Loading...",
+                      userProfile['username'],
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF222325),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      userEmail ?? "Loading...",
+                      userProfile['email'],
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.green.shade200,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.account_balance_wallet,
-                            size: 16,
-                            color: Colors.green.shade700,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            "\$${balance.toStringAsFixed(2)}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.notifications_none_rounded, size: 28),
-                onPressed: () {
-                  // Handle notifications
-                },
               ),
             ],
           ),
@@ -236,7 +192,11 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
         children: [
           const Text(
             "Account Type",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF222325),
+            ),
           ),
           const Spacer(),
           Container(
@@ -248,11 +208,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isSeller = false;
-                    });
-                  },
+                  onTap: () => setState(() => isSeller = false),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -260,7 +216,9 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                     ),
                     decoration: BoxDecoration(
                       color:
-                          !isSeller ? Colors.blue.shade700 : Colors.transparent,
+                          !isSeller
+                              ? const Color(0xFF222325)
+                              : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -273,11 +231,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isSeller = true;
-                    });
-                  },
+                  onTap: () => setState(() => isSeller = true),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -285,7 +239,9 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                     ),
                     decoration: BoxDecoration(
                       color:
-                          isSeller ? Colors.blue.shade700 : Colors.transparent,
+                          isSeller
+                              ? const Color(0xFF222325)
+                              : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -328,41 +284,32 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
               ),
             ),
           ),
-          if (isSeller)
+          if (isSeller) ...[
             _buildMenuItem(
               Icons.dashboard_outlined,
               "Dashboard",
               "View your seller statistics",
-              context,
-              DashboardPage(),
-              iconColor: Colors.blue,
+              const DashboardPage(),
             ),
-          if (isSeller)
             _buildMenuItem(
               Icons.add_circle_outline,
               "Create a Gig",
               "Offer your services to clients",
-              context,
-              EnhancedGigDetailsForm(),
-              iconColor: Colors.green,
+              const EnhancedGigDetailsForm(),
             ),
-          if (isSeller)
             _buildMenuItem(
               Icons.receipt_long_outlined,
-              "Orders",
-              "Manage your client orders",
-              context,
-              TransactionPage(),
-              iconColor: Colors.orange,
+              "Task Request",
+              "Manage your client task request",
+              const EnhancedSellerTaskRequestPage(),
             ),
-          _buildMenuItem(
-            Icons.favorite_border_outlined,
-            "Favorites",
-            "View your saved gigs",
-            context,
-            FavoritePage(),
-            iconColor: Colors.red,
-          ),
+            _buildMenuItem(
+              Icons.work,
+              "My Gigs",
+              "View your saved gigs",
+              const EnhancedGigPage(),
+            ),
+          ],
           const Divider(height: 32),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -379,43 +326,34 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
             Icons.report_outlined,
             "Report Seller",
             "Report problematic sellers",
-            context,
-            ReportSellerPage(),
-            iconColor: Colors.amber,
+            const ReportSellerPage(),
           ),
           _buildMenuItem(
             Icons.settings_outlined,
             "Settings",
             "Manage your account settings",
-            context,
-            SettingsPage(),
-            iconColor: Colors.grey,
+            const SettingsPage(),
           ),
           _buildMenuItem(
             Icons.group_add_outlined,
             "Invite Friends",
             "Share the app with friends",
-            context,
-            InviteFriendsPage(),
-            iconColor: Colors.indigo,
+            const InviteFriendsPage(),
           ),
           _buildMenuItem(
             Icons.help_outline,
             "Help & Support",
             "Get assistance with the app",
-            context,
-            HelpSupportPage(),
-            iconColor: Colors.teal,
+            const HelpSupportPage(),
           ),
           const Divider(height: 32),
           _buildMenuItem(
             Icons.logout,
             "Log Out",
             "Sign out of your account",
-            context,
-            LogoutPage(),
-            iconColor: Colors.red,
+            null,
             showArrow: false,
+            onTap: authService.signOut,
           ),
           const SizedBox(height: 24),
           Center(
@@ -433,10 +371,9 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
     IconData icon,
     String title,
     String subtitle,
-    BuildContext context,
-    Widget page, {
-    Color iconColor = Colors.black,
+    Widget? page, {
     bool showArrow = true,
+    VoidCallback? onTap,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -445,12 +382,16 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => page),
-            );
-          },
+          onTap:
+              onTap ??
+              () {
+                if (page != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => page),
+                  );
+                }
+              },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -458,10 +399,17 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
+                    color: const Color(0xFF222325).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: iconColor, size: 20),
+                  child: Icon(
+                    icon,
+                    color:
+                        title == "Log Out"
+                            ? Colors.red
+                            : const Color(0xFF222325),
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -503,99 +451,124 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen> {
   }
 }
 
-// Dummy Pages for Navigation (unchanged)
+// Edit Profile Page
+class EditProfilePage extends StatefulWidget {
+  final Map<String, dynamic> userProfile;
+
+  const EditProfilePage({
+    super.key,
+    required this.userProfile,
+    required currentUsername,
+  });
+
+  @override
+  _EditProfilePageState createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  late TextEditingController _nameController;
+  late TextEditingController _bioController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(
+      text: widget.userProfile['username'],
+    );
+    _bioController = TextEditingController(
+      text: widget.userProfile['bio'] ?? '',
+    );
+  }
+
+  Future<void> _updateProfile() async {
+    // Update profile in the backend/database using userProfile['id']
+    // For example:
+    // await userService.updateProfile(widget.userProfile['id'], _nameController.text, _bioController.text);
+
+    // After updating, navigate back to the profile screen
+    Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit Profile')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _bioController,
+              decoration: const InputDecoration(labelText: 'Bio'),
+              maxLines: 5,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _updateProfile,
+              child: const Text('Update Profile'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Placeholder pages (keep your existing implementations)
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Dashboard")),
-      body: Center(child: Text("Dashboard Page")),
-    );
-  }
-}
-
-class TransactionPage extends StatelessWidget {
-  const TransactionPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Transaction")),
-      body: Center(child: Text("Transaction Page")),
-    );
-  }
-}
-
-class FavoritePage extends StatelessWidget {
-  const FavoritePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Favorite")),
-      body: Center(child: Text("Favorite Page")),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Dashboard")),
+    body: const Center(child: Text("Dashboard Page")),
+  );
 }
 
 class ReportSellerPage extends StatelessWidget {
   const ReportSellerPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Report Seller")),
-      body: Center(child: Text("Report Seller Page")),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Report Seller")),
+    body: const Center(child: Text("Report Seller Page")),
+  );
 }
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Settings")),
-      body: Center(child: Text("Settings Page")),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Settings")),
+    body: const Center(child: Text("Settings Page")),
+  );
 }
 
 class InviteFriendsPage extends StatelessWidget {
   const InviteFriendsPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Invite Friends")),
-      body: Center(child: Text("Invite Friends Page")),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Invite Friends")),
+    body: const Center(child: Text("Invite Friends Page")),
+  );
 }
 
 class HelpSupportPage extends StatelessWidget {
   const HelpSupportPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Help & Support")),
-      body: Center(child: Text("Help & Support Page")),
-    );
-  }
-}
-
-class LogoutPage extends StatelessWidget {
-  const LogoutPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Log Out")),
-      body: Center(child: Text("Logging out...")),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text("Help & Support")),
+    body: const Center(child: Text("Help & Support Page")),
+  );
 }

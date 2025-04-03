@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/auth/auth_service.dart';
 import 'package:hirewise/components/buildSocialButton.dart';
-import 'package:hirewise/pages/bottomnavbar.dart';
 // Import the IntroPage
-import 'package:hirewise/pages/register.dart';
+import 'package:hirewise/pages/Authentication%20Pages/register.dart';
+import 'package:hirewise/pages/bottomnavbar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await authService.SignInwithEmailPassword(email, password);
+      await authService.signInWithEmailPassword(email, password);
       // If successful, navigate to IntroPage
       if (mounted) {
         Navigator.pushReplacement(

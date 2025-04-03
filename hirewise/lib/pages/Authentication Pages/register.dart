@@ -35,7 +35,7 @@ class _IntroRegisterState extends State<IntroRegister> {
     setState(() => _isLoading = true);
 
     try {
-      await authService.signupwithEmailPassword(email, password, username);
+      await authService.signupWithEmailPassword(email, password, username);
       // Navigate to another screen after successful registration
       // Example: Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/intropage.dart' show IntroPage, Intropage;
-import 'package:hirewise/pages/login.dart';
+import 'package:hirewise/pages/Authentication%20Pages/login.dart';
+import 'package:hirewise/pages/intropage.dart' show Intropage;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Authgate extends StatelessWidget {

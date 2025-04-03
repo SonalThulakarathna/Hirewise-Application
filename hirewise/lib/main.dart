@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/login.dart';
+import 'package:hirewise/pages/Authentication%20Pages/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -22,7 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Hirewise',
+      // This will follow the system theme
       home: LoginPage(),
     );
   }

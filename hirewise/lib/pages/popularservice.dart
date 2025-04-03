@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/components/gigcardtwo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-// Import your GigCardNew component
 
 class PopularServicesPage extends StatefulWidget {
   const PopularServicesPage({super.key});
@@ -43,14 +42,24 @@ class _PopularServicesPageState extends State<PopularServicesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Popular Services'),
+        title: const Text(
+          'Popular Services',
+          style: TextStyle(color: Color(0xFF222325)),
+        ), // Text color updated to #222325
+        backgroundColor: Colors.white, // AppBar background set to white
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color(0xFF222325),
+          ), // Back icon color updated to #222325
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(
+              Icons.filter_list,
+              color: Color(0xFF222325),
+            ), // Filter icon color updated to #222325
             onPressed: () {
               // Implement filter functionality
             },
@@ -105,11 +114,12 @@ class _PopularServicesPageState extends State<PopularServicesPage> {
                         return Column(
                           children: [
                             GigCardNew(
-                              sellerName: service['worker_name'] ?? 'Unknown',
+                              sellerId: service['user_id'],
+                              sellerName: service['sellername'] ?? 'Unknown',
                               gigTitle:
                                   service['Title'] ?? 'No title available.',
                               thumbnailImage:
-                                  service['thumbnail_image'] ??
+                                  service['image_url'] ??
                                   'lib/images/gigimage.jpg',
                               profileImage:
                                   service['profile_image'] ??
@@ -149,11 +159,23 @@ class CategoryChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
-        label: Text(label),
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Color(0xFF222325),
+          ),
+        ), // Text color updated
         selected: isSelected,
+        selectedColor: Color(0xFF222325), // Selected color updated to #222325
         onSelected: (selected) {
           // Implement chip selection logic
         },
+        backgroundColor:
+            Colors.grey.shade200, // Unselected color updated to grey
+        side: BorderSide(
+          color: Color(0xFF222325),
+          width: 1,
+        ), // Border color updated to #222325
       ),
     );
   }

@@ -1,5 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:hirewise/userservice/userservice.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+// Update this import path
 
 class EnhancedGigDetailsForm extends StatefulWidget {
   const EnhancedGigDetailsForm({super.key});
@@ -18,17 +24,56 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
 
-  // New state variables
+  // Form and state variables
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   final int _currentStep = 0;
   String? _selectedCategory;
-  List<Map<String, dynamic>> _categories = [];
+  File? _selectedImage;
+  String? _sellerName;
+  final ImagePicker _picker = ImagePicker();
+  final UserService _userService = UserService();
+
+  final List<Map<String, dynamic>> _categories = [
+    {'id': 1, 'category_name': 'Plumbing'},
+    {'id': 2, 'category_name': 'Mechanical'},
+    {'id': 3, 'category_name': 'Painting'},
+    {'id': 4, 'category_name': 'Construction'},
+    {'id': 5, 'category_name': 'Cleaning'},
+    {'id': 6, 'category_name': 'Driving'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchCategories();
+    _fetchSellerName();
+  }
+
+  Future<void> _fetchSellerName() async {
+    final name = await _userService.getUsername();
+    setState(() {
+      _sellerName = name;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+    }
   }
 
   @override
@@ -42,32 +87,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     super.dispose();
   }
 
-  // Fetch categories from Supabase
-  Future<void> _fetchCategories() async {
-    try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from('category')
-          .select('id, category_name');
-
-      setState(() {
-        _categories = List<Map<String, dynamic>>.from(response);
-      });
-    } catch (error) {
-      print('Error fetching categories: $error');
-      // Set some default categories in case of error
-      setState(() {
-        _categories = [
-          {'id': 1, 'category_name': 'Design'},
-          {'id': 2, 'category_name': 'Development'},
-          {'id': 3, 'category_name': 'Writing'},
-          {'id': 4, 'category_name': 'Marketing'},
-        ];
-      });
-    }
-  }
-
-  // Function to submit the form and insert data into Supabase
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,20 +117,44 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     }
 
     try {
-      // Prepare the data to be sent to Supabase
+      // Get the username from UserService
+      final username = await _userService.getUsername();
+
+      String? imageUrl;
+      if (_selectedImage != null) {
+        final fileExt = _selectedImage!.path.split('.').last;
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+        final filePath = 'Gigimages/$fileName';
+
+        await supabase.storage
+            .from('images')
+            .upload(
+              filePath,
+              _selectedImage!,
+              fileOptions: const FileOptions(
+                cacheControl: '3600',
+                upsert: false,
+              ),
+            );
+
+        imageUrl = supabase.storage.from('images').getPublicUrl(filePath);
+      }
+
+      // Prepare the data with seller_name
       final gigData = {
         'Title': _titleController.text,
         'Description': _descriptionController.text,
         'Price': double.tryParse(_priceController.text) ?? 0,
         'Instruction': _instructionController.text,
         'servicedescript': _serviceDescriptionController.text,
-        'category':
+        'category_id':
             int.tryParse(_selectedCategory ?? _categoryController.text) ?? 0,
         'user_id': userId,
         'created_at': DateTime.now().toIso8601String(),
+        'image_url': imageUrl,
+        'sellername': username, // Added seller name from UserService
       };
 
-      // Insert data into the Supabase table
       final response = await supabase.from('Giginfo').insert([gigData]);
 
       if (response.error != null) {
@@ -127,7 +170,7 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
             backgroundColor: Colors.green,
           ),
         );
-        _clearForm(); // Clear the form after successful submission
+        _clearForm();
         Navigator.pop(context);
       }
     } catch (e) {
@@ -144,7 +187,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     }
   }
 
-  // Method to clear the form fields
   void _clearForm() {
     _titleController.clear();
     _descriptionController.clear();
@@ -154,6 +196,7 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     _categoryController.clear();
     setState(() {
       _selectedCategory = null;
+      _selectedImage = null;
     });
   }
 
@@ -164,8 +207,8 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
         title: const Text('Create a New Gig'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFFF3F3F3),
+        foregroundColor: const Color(0xFF222325),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _submitForm,
@@ -176,7 +219,10 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                    : const Text('Publish'),
+                    : const Text(
+                      'Publish',
+                      style: TextStyle(color: Color(0xFF222325)),
+                    ),
           ),
         ],
       ),
@@ -190,6 +236,20 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
               // Header Card
               _buildHeaderCard(),
               const SizedBox(height: 24),
+
+              // Seller name preview (optional)
+              if (_sellerName != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Posted by: $_sellerName',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 8),
 
               // Basic Information Section
               _buildSectionCard(
@@ -246,6 +306,59 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Image Picker
+                    Card(
+                      elevation: 0,
+                      color: Colors.grey.shade50,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      child: InkWell(
+                        onTap: _pickImage,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          height: 200,
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_selectedImage != null)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate_outlined,
+                                      size: 48,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Add Gig Image',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -337,7 +450,7 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
+                    backgroundColor: const Color(0xFF222325),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
@@ -374,7 +487,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     );
   }
 
-  // Helper method to build a text field with consistent styling
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -403,7 +515,7 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+          borderSide: const BorderSide(color: Color(0xFF222325), width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -420,7 +532,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     );
   }
 
-  // Helper method to build a section card with expandable content
   Widget _buildSectionCard({
     required String title,
     required bool isExpanded,
@@ -432,7 +543,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
-          // Section header
           InkWell(
             onTap: onToggle,
             child: Padding(
@@ -441,22 +551,21 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
                 children: [
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.blue.shade700,
+                    color: const Color(0xFF222325),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade700,
+                      color: Color(0xFF222325),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          // Expandable content
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -467,7 +576,6 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
     );
   }
 
-  // Helper method to build the header card
   Widget _buildHeaderCard() {
     return Card(
       elevation: 0,
@@ -480,9 +588,9 @@ class _EnhancedGigDetailsFormState extends State<EnhancedGigDetailsForm> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.lightbulb_outline,
-              color: Colors.blue.shade700,
+              color: Color(0xFF222325),
               size: 32,
             ),
             const SizedBox(width: 16),
