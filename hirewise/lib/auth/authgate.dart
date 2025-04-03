@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/intro_login_page.dart';
+import 'package:hirewise/pages/Authentication%20Pages/login.dart';
 import 'package:hirewise/pages/intropage.dart' show Intropage;
 import 'package:supabase_flutter/supabase_flutter.dart';
 

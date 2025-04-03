@@ -1,42 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:hirewise/auth/auth_service.dart';
 import 'package:hirewise/components/buildSocialButton.dart';
-// Import the IntroPage
-import 'package:hirewise/pages/intro_register.dart';
-import 'package:hirewise/pages/intropage.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class IntroRegister extends StatefulWidget {
+  const IntroRegister({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<IntroRegister> createState() => _IntroRegisterState();
 }
 
-// ignore: camel_case_types
-class _LoginPageState extends State<LoginPage> {
+class _IntroRegisterState extends State<IntroRegister> {
   final authService = AuthService();
 
   final emailControl = TextEditingController();
   final passwordControl = TextEditingController();
+  final confirmPasswordControl = TextEditingController();
+  final usernameControl = TextEditingController();
 
   bool _isLoading = false;
 
-  void login() async {
+  void register() async {
     final email = emailControl.text;
     final password = passwordControl.text;
-    setState(() {
-      _isLoading = true; // Show the loading spinner
-    });
+    final confirmPassword = confirmPasswordControl.text;
+    final username = usernameControl.text;
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
-      await authService.SignInwithEmailPassword(email, password);
-      // If successful, navigate to IntroPage
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Intropage()),
-        );
-      }
+      await authService.signupWithEmailPassword(email, password, username);
+      // Navigate to another screen after successful registration
+      // Example: Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -44,9 +45,9 @@ class _LoginPageState extends State<LoginPage> {
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
     } finally {
-      setState(() {
-        _isLoading = false; // Hide the loading spinner
-      });
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -64,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 40),
                 const Center(
                   child: Text(
-                    "Welcome back!\nGlad to see you, Again!",
+                    "Hello Register\nGet Started your journey",
                     textAlign: TextAlign.left,
                     style: TextStyle(
                       fontSize: 30,
@@ -75,7 +76,33 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Email text field
+                // Username field
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(247, 248, 250, 1),
+                    border: Border.all(color: Colors.white24),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 0,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: usernameControl,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Enter username",
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Email field
                 Container(
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(247, 248, 250, 1),
@@ -99,9 +126,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
-                // Password text field
+                // Password field
                 Container(
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(247, 248, 250, 1),
@@ -126,53 +153,70 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+
+                // Confirm password field
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(247, 248, 250, 1),
+                    border: Border.all(color: Colors.white24),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 0,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: confirmPasswordControl,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Confirm password",
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 40),
 
-                // Sign in button
-                _isLoading
-                    ? const Center(
-                      child: CircularProgressIndicator(),
-                    ) // Show loading spinner when logging in
-                    : GestureDetector(
-                      onTap: login,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color.fromRGBO(34, 35, 37, 1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            "Sign in",
-                            textAlign: TextAlign.center,
+                // Sign up button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(34, 35, 37, 1),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child:
+                      _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            "Sign Up",
                             style: TextStyle(
                               color: Color.fromRGBO(243, 243, 243, 1),
                               fontSize: 19,
                               fontWeight: FontWeight.w100,
-                              height: 1.3,
                             ),
                           ),
-                        ),
-                      ),
-                    ),
+                ),
 
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account? "),
+                    const Text("Already have an account? "),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const IntroRegister(),
-                          ),
-                        );
+                        Navigator.pop(context); // Go back to login page
                       },
                       child: const Text(
-                        "Register Here",
+                        "Login Here",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline,

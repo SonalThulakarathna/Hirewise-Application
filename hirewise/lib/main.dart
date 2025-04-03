@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hirewise/pages/intro_login_page.dart';
+import 'package:hirewise/pages/Authentication%20Pages/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
-  runApp(const MyApp());
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: "https://qwlidwutyairqbuzgnko.supabase.co",
-
+    url: "https://ocgwcnwudqfrgiblazzs.supabase.co",
     anonKey:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3bGlkd3V0eWFpcnFidXpnbmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDExMDM2MDEsImV4cCI6MjA1NjY3OTYwMX0.noAwWW8f-17sKzdZ1Gx1sHqrics6GE7_buKq3o04aoc",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZ3djbnd1ZHFmcmdpYmxhenpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2Nzk2MDIsImV4cCI6MjA1NzI1NTYwMn0.A4xPw7XRFNm24-A_jJHjxkkfVrmbYrOC6jzsYTRLg_o",
   );
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Hirewise',
+      // This will follow the system theme
       home: LoginPage(),
     );
   }
